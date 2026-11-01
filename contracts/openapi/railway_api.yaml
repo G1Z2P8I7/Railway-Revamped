@@ -1,0 +1,212 @@
+openapi: 3.1.0
+info:
+  title: Railway Revamped Ingress & Transaction API
+  version: 2.0.0
+  description: High-throughput distributed segment leasing and reservation API for Railway Revamped.
+servers:
+  - url: https://api.railway.in/v1
+    description: Sovereign Anycast Ingress Cluster
+paths:
+  /search/trains:
+    get:
+      summary: Search catchment trains with live segment availability
+      parameters:
+        - name: from
+          in: query
+          required: true
+          schema:
+            type: string
+            example: "DELHI"
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+            example: "PATNA"
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+            example: "2026-11-05"
+        - name: class
+          in: query
+          schema:
+            type: string
+            default: "3A"
+        - name: quota
+          in: query
+          schema:
+            type: string
+            default: "GN"
+      responses:
+        '200':
+          description: Train availability listing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResponse'
+
+  /booking/hold:
+    post:
+      summary: Request atomic segment lease (300s TTL)
+      description: Atomically reserves segment capacity in Redis cluster with strict per-user cap (Max 1 active lease).
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HoldRequest'
+      responses:
+        '200':
+          description: Lease successfully held
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HoldResponse'
+        '409':
+          description: Active lease already in progress (Max 1 lease cap) or insufficient inventory
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /booking/release:
+    post:
+      summary: Voluntarily release an active lease before payment
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [lease_token, train_number, run_date]
+              properties:
+                lease_token: { type: string }
+                train_number: { type: string }
+                run_date: { type: string }
+      responses:
+        '200':
+          description: Lease successfully released back to segment inventory pool
+
+  /booking/confirm:
+    post:
+      summary: Confirm ticket booking post-payment authorization
+      description: Executes spatial family cohesion solver, registers composite PK berth allocations, and commits PNR.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmRequest'
+      responses:
+        '200':
+          description: Ticket confirmed with PNR and asymmetric Ed25519 offline QR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfirmResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    SearchResponse:
+      type: object
+      properties:
+        trains:
+          type: array
+          items:
+            type: object
+            properties:
+              train_number: { type: string }
+              train_name: { type: string }
+              departure_time: { type: string }
+              arrival_time: { type: string }
+              available_seats: { type: integer }
+              rac_count: { type: integer }
+              waitlist_count: { type: integer }
+              base_fare: { type: number }
+              confirmation_probability: { type: number }
+
+    HoldRequest:
+      type: object
+      required: [train_number, run_date, class_code, quota_code, origin_stop_index, dest_stop_index, passenger_count]
+      properties:
+        train_number: { type: string }
+        run_date: { type: string, format: date }
+        class_code: { type: string, example: "3A" }
+        quota_code: { type: string, example: "GN" }
+        origin_stop_index: { type: integer, example: 0 }
+        dest_stop_index: { type: integer, example: 2 }
+        passenger_count: { type: integer, minimum: 1, maximum: 6 }
+        lease_ttl_seconds: { type: integer, default: 300 }
+
+    HoldResponse:
+      type: object
+      properties:
+        success: { type: boolean }
+        lease_token: { type: string, format: uuid }
+        expires_at: { type: integer, description: "Epoch Unix seconds" }
+        remaining_inventory: { type: integer }
+        segment_bitmask: { type: integer }
+
+    ConfirmRequest:
+      type: object
+      required: [lease_token, payment_transaction_id, passengers]
+      properties:
+        lease_token: { type: string }
+        payment_transaction_id: { type: string }
+        has_flexi_cancel: { type: boolean, default: false }
+        passengers:
+          type: array
+          items:
+            type: object
+            required: [full_name, age, gender]
+            properties:
+              full_name: { type: string }
+              age: { type: integer }
+              gender: { type: string, enum: ["M", "F", "O"] }
+              berth_preference: { type: string, enum: ["LOWER", "MIDDLE", "UPPER", "SIDE_LOWER", "SIDE_UPPER", "NO_PREF"] }
+              senior_citizen: { type: boolean }
+
+    ConfirmResponse:
+      type: object
+      properties:
+        success: { type: boolean }
+        pnr_number: { type: string }
+        status: { type: string, example: "CONFIRMED" }
+        total_fare: { type: number }
+        ed25519_signed_qr: { type: string }
+        passengers:
+          type: array
+          items:
+            type: object
+            properties:
+              passenger_id: { type: string }
+              full_name: { type: string }
+              booking_status: { type: string, example: "CNF" }
+              coach_id: { type: string, example: "B1" }
+              berth_number: { type: integer, example: 21 }
+              berth_type: { type: string, example: "LB" }
+
+    ErrorResponse:
+      type: object
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string }
+        error_code: { type: string }
