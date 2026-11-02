@@ -1,0 +1,16 @@
+{
+  "name": "Railway Revamped — Modern Indian Rail Booking",
+  "short_name": "RailwayRevamped",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0B132B",
+  "theme_color": "#1C2541",
+  "description": "Sovereign high-throughput rail reservation, deterministic family seating, and zero-OTP rush checkout.",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}

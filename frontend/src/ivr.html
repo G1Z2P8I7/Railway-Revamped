@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Helpline 139 — Railway Revamped Voice Support</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; background: #0b132b; color: #fff; margin: 0; padding: 20px; }
+    .container { max-width: 600px; margin: 0 auto; background: #1c2541; padding: 24px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+    h1 { color: #48cae4; font-size: 1.5rem; margin-top: 0; }
+    .banner { background: #d90429; color: #fff; padding: 12px; border-radius: 8px; font-size: 0.9rem; line-height: 1.4; margin-bottom: 16px; border-left: 6px solid #ffb703; }
+    .dialpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 16px; }
+    .btn-key { background: #3a506b; color: #fff; border: 1px solid #5bc0be; border-radius: 8px; padding: 16px; font-size: 1.4rem; cursor: pointer; text-align: center; }
+    .btn-key:hover { background: #5bc0be; color: #0b132b; }
+    .screen { background: #000; color: #48cae4; font-family: monospace; font-size: 1rem; padding: 14px; border-radius: 6px; min-height: 90px; border: 1px solid #48cae4; }
+    .btn-call { background: #2ec4b6; color: #0b132b; font-weight: bold; padding: 12px; border-radius: 8px; border: none; width: 100%; margin-top: 12px; font-size: 1.1rem; cursor: pointer; }
+    .btn-hangup { background: #e71d36; color: #fff; font-weight: bold; padding: 12px; border-radius: 8px; border: none; width: 100%; margin-top: 8px; font-size: 1.1rem; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📞 Railway Helpline 139 — Voice Support</h1>
+
+    <div class="banner">
+      <strong>SECURITY ADVISORY:</strong><br>
+      <em>"Railway staff will never ask you for an OTP, password, or UPI PIN. Never share financial details over call."</em>
+    </div>
+
+    <div class="screen" id="ivrScreen">
+      [CALL DISCONNECTED]<br>
+      Press "Dial 139" to connect.
+    </div>
+
+    <button class="btn-call" id="btnCall" onclick="startCall()">Dial 139 (Toll-Free Helpline)</button>
+    <button class="btn-hangup" id="btnHangup" style="display: none;" onclick="hangup()">End Call</button>
+
+    <div class="dialpad" id="dialpad" style="display: none;">
+      <button class="btn-key" onclick="pressKey('1')">1<br><small style="font-size: 0.6rem;">PNR Status</small></button>
+      <button class="btn-key" onclick="pressKey('2')">2<br><small style="font-size: 0.6rem;">Train Status</small></button>
+      <button class="btn-key" onclick="pressKey('3')">3<br><small style="font-size: 0.6rem;">Refund Inquiry</small></button>
+      <button class="btn-key" onclick="pressKey('4')">4<br><small style="font-size: 0.6rem;">Language</small></button>
+      <button class="btn-key" onclick="pressKey('5')">5</button>
+      <button class="btn-key" onclick="pressKey('6')">6</button>
+      <button class="btn-key" onclick="pressKey('7')">7</button>
+      <button class="btn-key" onclick="pressKey('8')">8</button>
+      <button class="btn-key" onclick="pressKey('9')">9<br><small style="font-size: 0.6rem;">Support</small></button>
+      <button class="btn-key" onclick="pressKey('*')">*</button>
+      <button class="btn-key" onclick="pressKey('0')">0<br><small style="font-size: 0.6rem;">Agent</small></button>
+      <button class="btn-key" onclick="pressKey('#')">#</button>
+    </div>
+
+    <div style="margin-top: 16px; font-size: 0.85rem; color: #8d99ae;">
+      <a href="/" style="color: #48cae4;">[Return to Home]</a>
+    </div>
+  </div>
+
+  <script>
+    let inCall = false;
+
+    function speak(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.95;
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    function startCall() {
+      inCall = true;
+      document.getElementById('btnCall').style.display = 'none';
+      document.getElementById('btnHangup').style.display = 'block';
+      document.getElementById('dialpad').style.display = 'grid';
+
+      const prompt = "Welcome to Indian Railways Helpline 139. For PNR Status, press 1. For Train Schedule, press 2. For Refund Inquiry, press 3.";
+      document.getElementById('ivrScreen').innerHTML = "<strong>Connected to Helpline 139</strong><br>" + prompt;
+      speak(prompt);
+    }
+
+    function pressKey(key) {
+      if (!inCall) return;
+
+      let msg = "";
+      if (key === '1') {
+        msg = "You selected PNR status. Your latest PNR is confirmed in Coach B1, Bay 0, Lower Berth for senior passenger.";
+      } else if (key === '2') {
+        msg = "Train 12301 Howrah Rajdhani is on time from New Delhi platform number 12.";
+      } else if (key === '3') {
+        msg = "Your recent refund has been credited instantly to your Railway Transit Ledger. Balance is available for immediate rebooking.";
+      } else if (key === '4') {
+        msg = "Hindi ke liye 1 dabayein. Odia pain 2 dabantu. Bengali-r jonno 3.";
+      } else if (key === '9') {
+        msg = "Connecting your grievance directly to train conductor and division grievance officer.";
+      } else {
+        msg = `Key ${key} registered. Press 1 for PNR status or 0 for operator.`;
+      }
+
+      document.getElementById('ivrScreen').innerHTML = `<strong>Input: [${key}]</strong><br>${msg}`;
+      speak(msg);
+    }
+
+    function hangup() {
+      inCall = false;
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      document.getElementById('btnCall').style.display = 'block';
+      document.getElementById('btnHangup').style.display = 'none';
+      document.getElementById('dialpad').style.display = 'none';
+      document.getElementById('ivrScreen').innerText = "[CALL ENDED]";
+    }
+  </script>
+</body>
+</html>

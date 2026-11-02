@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RailPulse — Train Search Results</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface-bright": "#fdfae7",
+            "surface-container": "#f1eedb",
+            "surface-container-high": "#ece9d6",
+            "surface-container-highest": "#e6e3d0",
+            "surface-container-low": "#f7f4e1",
+            "surface-container-lowest": "#ffffff",
+            "on-surface": "#1c1c11",
+            "secondary": "#5a5c79",
+            "primary": "#9a442d",
+            "primary-container": "#e07a5f",
+            "on-primary": "#ffffff",
+            "tertiary": "#386753",
+            "on-tertiary": "#ffffff",
+            "inverse-on-surface": "#f4f1de",
+            "error": "#ba1a1a"
+          },
+          fontFamily: {
+            "display-hero": ["Outfit", "sans-serif"],
+            "headline-lg": ["Outfit", "sans-serif"],
+            "headline-md": ["Outfit", "sans-serif"],
+            "headline-sm": ["Outfit", "sans-serif"],
+            "title-station": ["Outfit", "sans-serif"],
+            "body-lg": ["Plus Jakarta Sans", "sans-serif"],
+            "body-md": ["Plus Jakarta Sans", "sans-serif"],
+            "body-sm": ["Plus Jakarta Sans", "sans-serif"],
+            "label-md": ["Plus Jakarta Sans", "sans-serif"],
+            "label-caps": ["Plus Jakarta Sans", "sans-serif"]
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="bg-inverse-on-surface text-on-surface font-body-md text-body-md antialiased min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="sticky top-0 z-50 bg-inverse-on-surface/95 backdrop-blur-md border-b border-secondary/15">
+    <div class="h-16 max-w-[1360px] mx-auto px-4 sm:px-6 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <a href="/" class="flex items-center gap-2 group">
+          <div class="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center font-headline-md shadow-[2px_2px_0px_0px_#5a5c79]">
+            <span class="material-symbols-outlined text-[20px]">train</span>
+          </div>
+          <span class="font-title-station text-title-station text-secondary tracking-widest uppercase group-hover:text-on-surface transition-colors">
+            RAILPULSE
+          </span>
+        </a>
+      </div>
+
+      <nav class="flex items-center gap-4 text-body-sm font-label-md">
+        <a class="text-secondary hover:text-on-surface transition-colors" href="/ivr">Helpline 139</a>
+        <a class="text-secondary hover:text-on-surface transition-colors hidden sm:inline-block" href="/text">Low Bandwidth Mode</a>
+        <a href="/" class="inline-flex items-center gap-1 text-primary font-semibold hover:underline">
+          <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+          New Search
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Modify Search Strip -->
+  <section class="bg-surface-container-lowest border-b border-secondary/20 shadow-sm py-4 relative z-30">
+    <div class="max-w-[1360px] mx-auto px-4 sm:px-6">
+      <form id="modify-search-form" onsubmit="handleModifySearch(event)" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2.5 items-center">
+        
+        <!-- From -->
+        <div class="lg:col-span-4 relative bg-surface-container-low rounded-lg p-2.5 border border-secondary/20 focus-within:border-secondary focus-within:bg-surface-container-lowest transition-all group">
+          <div class="text-secondary font-label-caps uppercase text-[10px] font-bold tracking-wider mb-0.5">From</div>
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="material-symbols-outlined text-secondary text-[18px] shrink-0 group-focus-within:text-primary">trip_origin</span>
+            <div class="min-w-0 flex-1 overflow-hidden">
+              <input id="mod-from" autocomplete="off" class="w-full min-w-0 bg-transparent text-[14px] font-bold text-on-surface focus:outline-none placeholder:text-secondary/50 placeholder:font-normal truncate" type="text" placeholder="Enter origin station" required>
+            </div>
+          </div>
+          <div id="mod-from-suggestions" class="hidden absolute top-full left-0 w-full min-w-[280px] mt-1 bg-surface-container-lowest border border-secondary/30 rounded-xl shadow-[0_16px_36px_rgba(0,0,0,0.2)] z-50 max-h-64 overflow-y-auto divide-y divide-secondary/10"></div>
+        </div>
+
+        <!-- Swap -->
+        <div class="hidden lg:flex items-center justify-center -mx-2 z-10">
+          <button type="button" onclick="swapModifyInputs()" class="w-8 h-8 rounded-full bg-secondary text-inverse-on-surface flex items-center justify-center hover:rotate-180 hover:bg-on-surface transition-all shadow-sm shrink-0">
+            <span class="material-symbols-outlined text-[16px]">swap_horiz</span>
+          </button>
+        </div>
+
+        <!-- To -->
+        <div class="lg:col-span-4 relative bg-surface-container-low rounded-lg p-2.5 border border-secondary/20 focus-within:border-secondary focus-within:bg-surface-container-lowest transition-all group">
+          <div class="text-secondary font-label-caps uppercase text-[10px] font-bold tracking-wider mb-0.5">To</div>
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="material-symbols-outlined text-secondary text-[18px] shrink-0 group-focus-within:text-primary">location_on</span>
+            <div class="min-w-0 flex-1 overflow-hidden">
+              <input id="mod-to" autocomplete="off" class="w-full min-w-0 bg-transparent text-[14px] font-bold text-on-surface focus:outline-none placeholder:text-secondary/50 placeholder:font-normal truncate" type="text" placeholder="Enter destination station" required>
+            </div>
+          </div>
+          <div id="mod-to-suggestions" class="hidden absolute top-full left-0 w-full min-w-[280px] mt-1 bg-surface-container-lowest border border-secondary/30 rounded-xl shadow-[0_16px_36px_rgba(0,0,0,0.2)] z-50 max-h-64 overflow-y-auto divide-y divide-secondary/10"></div>
+        </div>
+
+        <!-- Date (Calendar Popover with DD-MM-YYYY) -->
+        <div class="lg:col-span-2 bg-surface-container-low rounded-lg p-2.5 border border-secondary/20 focus-within:border-secondary focus-within:bg-surface-container-lowest transition-all group relative z-30">
+          <div class="text-secondary font-label-caps uppercase text-[10px] font-bold tracking-wider mb-0.5">Date (DD-MM-YYYY)</div>
+          <div class="flex items-center gap-2 min-w-0 cursor-pointer" onclick="toggleModCalendar(event)">
+            <span class="material-symbols-outlined text-secondary text-[18px] shrink-0 group-focus-within:text-primary">calendar_month</span>
+            <input id="mod-date" autocomplete="off" class="w-full min-w-0 bg-transparent text-[14px] font-bold text-on-surface focus:outline-none truncate cursor-pointer tracking-wide" type="text" placeholder="DD-MM-YYYY" required>
+          </div>
+
+          <!-- Interactive Calendar Popover -->
+          <div id="mod-calendar-dropdown" class="hidden absolute top-full left-0 mt-2 bg-surface-container-lowest border border-secondary/30 rounded-xl shadow-[0_24px_50px_rgba(0,0,0,0.28)] z-50 p-4 w-[290px] select-none">
+            <div class="flex items-center justify-between mb-3 pb-2 border-b border-secondary/15">
+              <button id="mod-cal-prev" type="button" onclick="navigateModCalendarMonth(-1, event)" class="w-7 h-7 rounded hover:bg-surface-container flex items-center justify-center text-secondary">
+                <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+              </button>
+              <div id="mod-calendar-title" class="font-bold text-[13px] text-on-surface">November 2026</div>
+              <button id="mod-cal-next" type="button" onclick="navigateModCalendarMonth(1, event)" class="w-7 h-7 rounded hover:bg-surface-container flex items-center justify-center text-secondary">
+                <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+              </button>
+            </div>
+            <div class="grid grid-cols-7 gap-1 text-center font-bold text-[10px] text-secondary/70 mb-2">
+              <span class="text-error/80">Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+            </div>
+            <div id="mod-calendar-days" class="grid grid-cols-7 gap-1 text-center text-[12px]"></div>
+            <div class="flex items-center justify-between pt-2 mt-2 border-t border-secondary/15 text-[10px] text-secondary/60 font-semibold">
+              <span>Advance Booking (ARP)</span>
+              <span class="text-primary font-bold">Max 60 Days</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quota -->
+        <div class="lg:col-span-1 bg-surface-container-low rounded-lg p-2.5 border border-secondary/20 focus-within:border-secondary focus-within:bg-surface-container-lowest transition-all group">
+          <div class="text-secondary font-label-caps uppercase text-[10px] font-bold tracking-wider mb-0.5">Quota</div>
+          <select id="mod-quota" class="w-full min-w-0 bg-transparent text-[13px] font-bold text-on-surface focus:outline-none cursor-pointer">
+            <option value="GN">General (GN)</option>
+            <option value="TQ">Tatkal (TQ)</option>
+            <option value="SS">Senior Citizen (SS)</option>
+            <option value="LD">Ladies (LD)</option>
+          </select>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="lg:col-span-1">
+          <button type="submit" class="w-full bg-primary-container text-on-primary font-label-md text-[13px] py-3 px-3 rounded-lg shadow-sm hover:shadow hover:-translate-y-0.5 transition-all flex items-center justify-center gap-1 font-bold cursor-pointer">
+            <span>MODIFY</span>
+            <span class="material-symbols-outlined text-[16px]">search</span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </section>
+
+  <!-- Date Ribbon (Day Selector) -->
+  <section class="bg-surface-container-high/60 border-b border-secondary/15 py-2">
+    <div class="max-w-[1360px] mx-auto px-4 sm:px-6">
+      <div id="date-ribbon" class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+        <!-- Dynamically rendered date tabs -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content Area: Sidebar Filters + Trains List -->
+  <main class="flex-1 max-w-[1360px] w-full mx-auto px-4 sm:px-6 py-6">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+      <!-- Left Sidebar: Filters -->
+      <aside class="col-span-1 lg:col-span-3 bg-surface-container-lowest rounded-xl p-4 border border-secondary/20 shadow-sm sticky top-24">
+        <div class="flex items-center justify-between border-b border-secondary/15 pb-3 mb-4">
+          <div class="flex items-center gap-1.5 font-bold text-on-surface font-title-station">
+            <span class="material-symbols-outlined text-[18px] text-primary">filter_list</span>
+            <span>Filters</span>
+          </div>
+          <button onclick="resetFilters()" class="text-[12px] font-semibold text-primary hover:underline cursor-pointer">Reset All</button>
+        </div>
+
+        <!-- Quick Filters -->
+        <div class="mb-4 pb-4 border-b border-secondary/10">
+          <div class="font-label-caps uppercase text-[11px] text-secondary font-bold tracking-wider mb-2">Quick Filters</div>
+          <div class="space-y-2 text-[13px]">
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" id="filter-avail-only" onchange="applyFilters()" class="w-4 h-4 accent-primary rounded">
+              <span>Available Trains Only</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" id="filter-ac-only" onchange="applyFilters()" class="w-4 h-4 accent-primary rounded">
+              <span>AC Coaches Only</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Journey Classes -->
+        <div class="mb-4 pb-4 border-b border-secondary/10">
+          <div class="font-label-caps uppercase text-[11px] text-secondary font-bold tracking-wider mb-2">Journey Class</div>
+          <div class="grid grid-cols-2 gap-2 text-[13px]">
+            <label class="flex items-center gap-1.5 cursor-pointer select-none">
+              <input type="checkbox" value="1A" onchange="applyFilters()" class="filter-class w-4 h-4 accent-primary">
+              <span>1A (1st AC)</span>
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer select-none">
+              <input type="checkbox" value="2A" onchange="applyFilters()" class="filter-class w-4 h-4 accent-primary">
+              <span>2A (2nd AC)</span>
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer select-none">
+              <input type="checkbox" value="3A" onchange="applyFilters()" class="filter-class w-4 h-4 accent-primary">
+              <span>3A (3rd AC)</span>
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer select-none">
+              <input type="checkbox" value="3E" onchange="applyFilters()" class="filter-class w-4 h-4 accent-primary">
+              <span>3E (3 AC Econ)</span>
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer select-none">
+              <input type="checkbox" value="CC" onchange="applyFilters()" class="filter-class w-4 h-4 accent-primary">
+              <span>CC (Chair Car)</span>
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer select-none">
+              <input type="checkbox" value="EC" onchange="applyFilters()" class="filter-class w-4 h-4 accent-primary">
+              <span>EC (Exec. CC)</span>
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer select-none">
+              <input type="checkbox" value="SL" onchange="applyFilters()" class="filter-class w-4 h-4 accent-primary">
+              <span>SL (Sleeper)</span>
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer select-none">
+              <input type="checkbox" value="2S" onchange="applyFilters()" class="filter-class w-4 h-4 accent-primary">
+              <span>2S (Second Sit)</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Train Types -->
+        <div class="mb-4 pb-4 border-b border-secondary/10">
+          <div class="font-label-caps uppercase text-[11px] text-secondary font-bold tracking-wider mb-2">Train Type</div>
+          <div class="space-y-1.5 text-[13px]">
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" value="VANDE_BHARAT" onchange="applyFilters()" class="filter-type w-4 h-4 accent-primary">
+              <span>Vande Bharat</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" value="RAJDHANI" onchange="applyFilters()" class="filter-type w-4 h-4 accent-primary">
+              <span>Rajdhani Express</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" value="SHATABDI" onchange="applyFilters()" class="filter-type w-4 h-4 accent-primary">
+              <span>Shatabdi Express</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" value="SUPERFAST" onchange="applyFilters()" class="filter-type w-4 h-4 accent-primary">
+              <span>Superfast</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" value="MAIL_EXPRESS" onchange="applyFilters()" class="filter-type w-4 h-4 accent-primary">
+              <span>Mail / Express</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Departure Time -->
+        <div>
+          <div class="font-label-caps uppercase text-[11px] text-secondary font-bold tracking-wider mb-2">Departure Time</div>
+          <div class="grid grid-cols-2 gap-1.5 text-[11px]">
+            <button type="button" onclick="toggleTimeFilter('dep', 'early', this)" class="time-filter border border-secondary/20 rounded p-1.5 text-center hover:bg-surface-container">
+              <span class="block font-bold">00:00 - 06:00</span>
+              <span class="text-secondary text-[10px]">Early Morning</span>
+            </button>
+            <button type="button" onclick="toggleTimeFilter('dep', 'morning', this)" class="time-filter border border-secondary/20 rounded p-1.5 text-center hover:bg-surface-container">
+              <span class="block font-bold">06:00 - 12:00</span>
+              <span class="text-secondary text-[10px]">Morning</span>
+            </button>
+            <button type="button" onclick="toggleTimeFilter('dep', 'midday', this)" class="time-filter border border-secondary/20 rounded p-1.5 text-center hover:bg-surface-container">
+              <span class="block font-bold">12:00 - 18:00</span>
+              <span class="text-secondary text-[10px]">Mid Day</span>
+            </button>
+            <button type="button" onclick="toggleTimeFilter('dep', 'night', this)" class="time-filter border border-secondary/20 rounded p-1.5 text-center hover:bg-surface-container">
+              <span class="block font-bold">18:00 - 24:00</span>
+              <span class="text-secondary text-[10px]">Night</span>
+            </button>
+          </div>
+        </div>
+
+      </aside>
+
+      <!-- Right Column: Train Cards List -->
+      <section class="col-span-1 lg:col-span-9">
+        
+        <!-- Results Bar -->
+        <div class="bg-surface-container-lowest rounded-xl p-4 border border-secondary/20 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+          <div>
+            <h1 id="results-headline" class="font-headline-sm text-[20px] text-on-surface font-bold leading-tight">
+              Loading available trains...
+            </h1>
+            <p id="results-subtext" class="text-body-sm text-secondary mt-0.5"></p>
+          </div>
+
+          <div class="flex items-center gap-2 self-end sm:self-center">
+            <span class="text-[12px] text-secondary font-semibold">Sort By:</span>
+            <select id="sort-select" onchange="sortAndRenderTrains()" class="bg-surface-container-low text-[13px] font-semibold text-on-surface rounded-lg px-2.5 py-1.5 border border-secondary/20 focus:outline-none cursor-pointer">
+              <option value="dep_early">Departure: Early First</option>
+              <option value="dep_late">Departure: Late First</option>
+              <option value="duration">Duration: Shortest First</option>
+              <option value="arr_early">Arrival: Early First</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Train Cards Container -->
+        <div id="trains-list" class="space-y-4">
+          <!-- Dynamically populated train cards -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="hidden bg-surface-container-lowest rounded-xl p-12 text-center border border-secondary/20">
+          <span class="material-symbols-outlined text-[48px] text-secondary/40 mb-2">train</span>
+          <h3 class="font-headline-sm text-on-surface mb-1">No Trains Found</h3>
+          <p class="text-secondary text-body-sm max-w-md mx-auto mb-4">
+            No direct train services match your active filters on this date. Try clearing filters or selecting another date.
+          </p>
+          <button onclick="resetFilters()" class="bg-primary text-on-primary font-label-md px-4 py-2 rounded-lg text-sm">
+            Reset Filters
+          </button>
+        </div>
+
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Passenger Details & Booking Modal -->
+  <div id="booking-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-surface-container-lowest rounded-2xl max-w-2xl w-full border border-secondary/20 shadow-2xl p-6 relative my-8">
+      
+      <!-- Close Button -->
+      <button onclick="closeBookingModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-secondary hover:text-on-surface">
+        <span class="material-symbols-outlined text-[18px]">close</span>
+      </button>
+
+      <!-- Modal Header -->
+      <div class="border-b border-secondary/15 pb-4 mb-4">
+        <span class="text-primary font-label-caps uppercase text-[11px] font-bold tracking-wider">RESERVATION CORE</span>
+        <h2 id="modal-train-title" class="font-headline-sm text-on-surface text-[22px] font-bold mt-0.5"></h2>
+        <div id="modal-train-subtitle" class="text-body-sm text-secondary mt-1"></div>
+      </div>
+
+      <!-- Passenger Details Form -->
+      <form onsubmit="handleBookingSubmit(event)">
+        
+        <div class="space-y-4 mb-6">
+          <div class="font-label-caps text-secondary uppercase text-[11px] font-bold">Passenger Details</div>
+          
+          <!-- Passenger 1 -->
+          <div class="bg-surface-container-low p-4 rounded-xl border border-secondary/15 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-[12px] font-bold text-on-surface">Passenger 1 (Primary)</span>
+              <span class="text-[11px] text-secondary">Aadhaar Linked</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+              <div class="sm:col-span-6">
+                <input id="pax-1-name" type="text" placeholder="Full Name as per ID" value="Kalyani Devi" required class="w-full bg-surface-container-lowest p-2 rounded-lg border border-secondary/20 text-[14px] font-semibold focus:outline-none">
+              </div>
+              <div class="sm:col-span-3">
+                <input id="pax-1-age" type="number" placeholder="Age" value="71" min="1" max="120" required class="w-full bg-surface-container-lowest p-2 rounded-lg border border-secondary/20 text-[14px] font-semibold focus:outline-none">
+              </div>
+              <div class="sm:col-span-3">
+                <select id="pax-1-gender" class="w-full bg-surface-container-lowest p-2 rounded-lg border border-secondary/20 text-[14px] font-semibold focus:outline-none">
+                  <option value="F">Female</option>
+                  <option value="M">Male</option>
+                  <option value="T">Transgender</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+              <div class="sm:col-span-6">
+                <select id="pax-1-berth" class="w-full bg-surface-container-lowest p-2 rounded-lg border border-secondary/20 text-[13px] font-semibold focus:outline-none">
+                  <option value="LB">Lower Berth (Preferred for Senior)</option>
+                  <option value="MB">Middle Berth</option>
+                  <option value="UB">Upper Berth</option>
+                  <option value="SL">Side Lower</option>
+                  <option value="SU">Side Upper</option>
+                </select>
+              </div>
+              <div class="sm:col-span-6 flex items-center">
+                <label class="flex items-center gap-2 text-[12px] text-secondary cursor-pointer">
+                  <input type="checkbox" id="pax-1-senior" checked class="w-4 h-4 accent-primary">
+                  <span>Senior Citizen Concession (Lower Berth Auto)</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Passenger 2 -->
+          <div class="bg-surface-container-low p-4 rounded-xl border border-secondary/15 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-[12px] font-bold text-on-surface">Passenger 2</span>
+              <span class="text-[11px] text-secondary">Optional Companion</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+              <div class="sm:col-span-6">
+                <input id="pax-2-name" type="text" placeholder="Full Name as per ID" value="Arjun Verma" class="w-full bg-surface-container-lowest p-2 rounded-lg border border-secondary/20 text-[14px] font-semibold focus:outline-none">
+              </div>
+              <div class="sm:col-span-3">
+                <input id="pax-2-age" type="number" placeholder="Age" value="28" min="1" max="120" class="w-full bg-surface-container-lowest p-2 rounded-lg border border-secondary/20 text-[14px] font-semibold focus:outline-none">
+              </div>
+              <div class="sm:col-span-3">
+                <select id="pax-2-gender" class="w-full bg-surface-container-lowest p-2 rounded-lg border border-secondary/20 text-[14px] font-semibold focus:outline-none">
+                  <option value="M">Male</option>
+                  <option value="F">Female</option>
+                  <option value="T">Transgender</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Add-ons & Policy -->
+        <div class="bg-surface-container-low p-3 rounded-xl border border-secondary/15 mb-6 text-[13px] text-secondary space-y-2">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" id="modal-flexi" checked class="w-4 h-4 accent-primary">
+            <span><strong>Free Cancellation:</strong> 100% refund prior to chart preparation</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" id="modal-auto-up" checked class="w-4 h-4 accent-primary">
+            <span>Consider for Free Auto-Upgradation if higher class vacant</span>
+          </label>
+        </div>
+
+        <!-- Fare Summary & CTA -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-secondary/15">
+          <div>
+            <div class="text-[11px] text-secondary font-label-caps uppercase">Total Payable</div>
+            <div id="modal-fare-display" class="font-headline-sm text-primary text-[24px] font-bold">₹0.00</div>
+          </div>
+
+          <button id="modal-pay-btn" type="submit" class="w-full sm:w-auto bg-primary text-on-primary font-label-md px-8 py-3 rounded-xl shadow-[2px_2px_0px_0px_#5a5c79] hover:-translate-y-0.5 transition-all text-sm font-bold flex items-center justify-center gap-2 cursor-pointer">
+            <span>PROCEED TO PAYMENT</span>
+            <span class="material-symbols-outlined text-[18px]">lock</span>
+          </button>
+        </div>
+
+      </form>
+
+      <!-- Confirmation Stage Overlay inside modal -->
+      <div id="modal-success-screen" class="hidden absolute inset-0 bg-surface-container-lowest rounded-2xl p-6 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center gap-3 text-tertiary mb-3">
+            <span class="material-symbols-outlined text-[36px]">check_circle</span>
+            <div>
+              <h3 class="font-headline-sm text-[22px] font-bold text-on-surface">Ticket Confirmed!</h3>
+              <p class="text-body-sm text-secondary">E-Ticket generated and saved to your account.</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 my-4">
+            <div class="bg-surface-container-low p-3.5 rounded-xl border border-secondary/15">
+              <div class="text-[10px] text-secondary uppercase font-bold tracking-wider">PNR NUMBER</div>
+              <div id="confirmed-modal-pnr" class="font-headline-sm text-[24px] font-bold text-primary mt-1"></div>
+            </div>
+            <div class="bg-surface-container-low p-3.5 rounded-xl border border-secondary/15">
+              <div class="text-[10px] text-secondary uppercase font-bold tracking-wider">BERTH / COACH</div>
+              <div class="font-title-station text-[16px] font-bold text-on-surface mt-1">Coach B1</div>
+              <div class="text-[12px] text-secondary">Berths 1 (LB) & 2 (MB)</div>
+            </div>
+            <div class="bg-surface-container-low p-3.5 rounded-xl border border-secondary/15">
+              <div class="text-[10px] text-secondary uppercase font-bold tracking-wider">STATUS</div>
+              <div class="font-title-station text-[16px] font-bold text-tertiary mt-1">CONFIRMED (CNF)</div>
+              <div class="text-[12px] text-secondary">Chart Not Prepared</div>
+            </div>
+          </div>
+
+          <div class="bg-surface-container-low p-3.5 rounded-xl border border-secondary/15 text-[13px] text-secondary">
+            <strong>Train:</strong> <span id="confirmed-train-info"></span><br>
+            <strong>Date:</strong> <span id="confirmed-date-info"></span>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between pt-4 border-t border-secondary/15">
+          <button onclick="window.print()" class="text-primary hover:underline text-[13px] font-bold inline-flex items-center gap-1 cursor-pointer">
+            <span class="material-symbols-outlined text-[16px]">print</span> Print E-Ticket
+          </button>
+          <button onclick="closeBookingModal()" class="bg-secondary text-inverse-on-surface px-6 py-2.5 rounded-xl font-label-md text-sm font-bold cursor-pointer">
+            Done
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Train Schedule Modal -->
+  <div id="schedule-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-surface-container-lowest rounded-2xl max-w-xl w-full border border-secondary/20 shadow-2xl p-6 relative max-h-[85vh] flex flex-col">
+      <div class="flex items-center justify-between border-b border-secondary/15 pb-3 mb-3">
+        <div>
+          <h3 id="schedule-title" class="font-headline-sm text-[18px] font-bold text-on-surface"></h3>
+          <p id="schedule-subtitle" class="text-body-sm text-secondary"></p>
+        </div>
+        <button onclick="document.getElementById('schedule-modal').classList.add('hidden')" class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-secondary hover:text-on-surface">
+          <span class="material-symbols-outlined text-[18px]">close</span>
+        </button>
+      </div>
+      <div id="schedule-stops-list" class="flex-1 overflow-y-auto divide-y divide-secondary/10 pr-2 space-y-2 text-[13px]">
+        <!-- Halts list -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Script: Real IRCTC Search & Booking Logic -->
+  <script>
+    // Authentic IRCTC Station Database
+    const STATIONS = [
+      { code: "MAS", name: "MGR CHENNAI CTL", city: "CHENNAI", state: "TAMIL NADU", zone: "Southern Railway" },
+      { code: "BKSC", name: "BOKARO STEEL CITY", city: "BOKARO", state: "JHARKHAND", zone: "South Eastern Railway" },
+      { code: "NDLS", name: "NEW DELHI", city: "NEW DELHI", state: "DELHI", zone: "Northern Railway" },
+      { code: "BSB", name: "VARANASI JN", city: "VARANASI", state: "UTTAR PRADESH", zone: "Northern Railway" },
+      { code: "HWH", name: "HOWRAH JN", city: "HOWRAH", state: "WEST BENGAL", zone: "Eastern Railway" },
+      { code: "SDAH", name: "SEALDAH", city: "KOLKATA", state: "WEST BENGAL", zone: "Eastern Railway" },
+      { code: "NJP", name: "NEW JALPAIGURI", city: "SILIGURI", state: "WEST BENGAL", zone: "Northeast Frontier Railway" },
+      { code: "SBC", name: "KSR BENGALURU CITY", city: "BENGALURU", state: "KARNATAKA", zone: "South Western Railway" },
+      { code: "CSMT", name: "CHHATRAPATI SHIVAJI MAHARAJ T", city: "MUMBAI", state: "MAHARASHTRA", zone: "Central Railway" },
+      { code: "MMCT", name: "MUMBAI CENTRAL", city: "MUMBAI", state: "MAHARASHTRA", zone: "Western Railway" },
+      { code: "PUNE", name: "PUNE JN", city: "PUNE", state: "MAHARASHTRA", zone: "Central Railway" },
+      { code: "ADI", name: "AHMEDABAD JN", city: "AHMEDABAD", state: "GUJARAT", zone: "Western Railway" },
+      { code: "PNBE", name: "PATNA JN", city: "PATNA", state: "BIHAR", zone: "East Central Railway" },
+      { code: "RNC", name: "RANCHI JN", city: "RANCHI", state: "JHARKHAND", zone: "South Eastern Railway" },
+      { code: "TATA", name: "TATANAGAR JN", city: "JAMSHEDPUR", state: "JHARKHAND", zone: "South Eastern Railway" },
+      { code: "DHN", name: "DHANBAD JN", city: "DHANBAD", state: "JHARKHAND", zone: "East Central Railway" }
+    ];
+
+    let currentTrainsData = [];
+    let displayedTrains = [];
+    let selectedBookingTrain = null;
+    let selectedBookingClass = null;
+
+    // Security: Entity escape utility to prevent DOM-based XSS (VULN-06)
+    function escapeHTML(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    // Date formatting and parsing helpers (DD-MM-YYYY)
+    function parseDateToObj(str) {
+      if (!str) return new Date(2026, 10, 5);
+      const parts = str.trim().split('-');
+      if (parts.length === 3) {
+        if (parts[0].length === 2 && parts[2].length === 4) { // DD-MM-YYYY
+          return new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
+        } else if (parts[0].length === 4) { // YYYY-MM-DD
+          return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+        }
+      }
+      return new Date(2026, 10, 5);
+    }
+
+    function formatDDMMYYYY(d) {
+      const dd = String(d.getDate()).padStart(2, '0');
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const yyyy = d.getFullYear();
+      return `${dd}-${mm}-${yyyy}`;
+    }
+
+    const monthNames = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+
+    // Parse URL Query Params
+    const urlParams = new URLSearchParams(window.location.search);
+    let fromParam = urlParams.get('from') || '';
+    let toParam = urlParams.get('to') || '';
+    let rawDateParam = urlParams.get('date') || '05-11-2026';
+    let dateObj = parseDateToObj(rawDateParam);
+    let dateParam = formatDDMMYYYY(dateObj);
+    let quotaParam = urlParams.get('quota') || 'GN';
+
+    document.getElementById('mod-from').value = fromParam;
+    document.getElementById('mod-to').value = toParam;
+    document.getElementById('mod-date').value = dateParam;
+    document.getElementById('mod-quota').value = quotaParam;
+
+    // Initialize Station Autocomplete on Modify inputs
+    setupStationAutocomplete('mod-from', 'mod-from-suggestions');
+    setupStationAutocomplete('mod-to', 'mod-to-suggestions');
+
+    // Autocomplete Logic
+    function searchStations(query) {
+      if (!query) return [];
+      const raw = query.trim().toUpperCase();
+      const q = raw.replace(/[()\-·]/g, ' ').replace(/\s+/g, ' ').trim();
+      const tokens = q.split(' ').filter(Boolean);
+
+      const scored = [];
+      for (const s of STATIONS) {
+        let score = 0;
+        const sCode = s.code.toUpperCase();
+        const sName = s.name.toUpperCase();
+        const sCity = s.city.toUpperCase();
+
+        if (sCode === q || tokens.includes(sCode)) {
+          score = 3000;
+        } else if (sCode.startsWith(tokens[0] || q)) {
+          score = 2000;
+        } else if (sCode.includes(tokens[0] || q)) {
+          score = 1500;
+        } else if (sName.startsWith(q)) {
+          score = 1000;
+        } else if (sCity.startsWith(q)) {
+          score = 800;
+        } else if (sName.includes(q)) {
+          score = 600;
+        } else if (sCity.includes(q)) {
+          score = 400;
+        }
+
+        if (score > 0) scored.push({ station: s, score });
+      }
+      scored.sort((a, b) => b.score - a.score);
+      return scored.slice(0, 8).map(x => x.station);
+    }
+
+    function setupStationAutocomplete(inputId, dropdownId) {
+      const input = document.getElementById(inputId);
+      const dropdown = document.getElementById(dropdownId);
+
+      function render(items) {
+        if (!items || items.length === 0) {
+          dropdown.classList.add('hidden');
+          return;
+        }
+        dropdown.innerHTML = items.map((s, idx) => `
+          <div class="px-3.5 py-2 hover:bg-surface-container cursor-pointer text-left flex items-center justify-between text-[13px] font-bold" data-idx="${idx}">
+            <span class="truncate">${s.name} - ${s.code}</span>
+            <span class="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded border border-primary/20 shrink-0 ml-2">${s.code}</span>
+          </div>
+        `).join('');
+        dropdown.classList.remove('hidden');
+
+        dropdown.querySelectorAll('[data-idx]').forEach(el => {
+          el.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            const s = items[el.getAttribute('data-idx')];
+            input.value = `${s.name} - ${s.code}`;
+            dropdown.classList.add('hidden');
+          });
+        });
+      }
+
+      input.addEventListener('input', () => {
+        render(searchStations(input.value));
+      });
+      input.addEventListener('focus', () => {
+        render(searchStations(input.value) || STATIONS.slice(0, 6));
+      });
+      document.addEventListener('click', (e) => {
+        if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+          dropdown.classList.add('hidden');
+        }
+      });
+    }
+
+    function swapModifyInputs() {
+      const f = document.getElementById('mod-from');
+      const t = document.getElementById('mod-to');
+      const tmp = f.value;
+      f.value = t.value;
+      t.value = tmp;
+    }
+
+    // 60-Day Advance Reservation Period (ARP) Calculator
+    function getBookingDateRange() {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const maxDate = new Date(today);
+      maxDate.setDate(today.getDate() + 60);
+      maxDate.setHours(23, 59, 59, 999);
+
+      return { today, maxDate };
+    }
+
+    function isDateWithinARP(d) {
+      if (!d || isNaN(d.getTime())) return false;
+      const { today, maxDate } = getBookingDateRange();
+      const test = new Date(d);
+      test.setHours(0, 0, 0, 0);
+      return test >= today && test <= maxDate;
+    }
+
+    function handleModifySearch(e) {
+      e.preventDefault();
+      fromParam = document.getElementById('mod-from').value;
+      toParam = document.getElementById('mod-to').value;
+      dateParam = document.getElementById('mod-date').value;
+      quotaParam = document.getElementById('mod-quota').value;
+
+      const parsed = parseDateToObj(dateParam);
+      if (!parsed || !isDateWithinARP(parsed)) {
+        alert("Advance reservation is only available up to 60 days in advance (ARP). Please select a valid date between today and " + formatDDMMYYYY(getBookingDateRange().maxDate) + ".");
+        openModCalendar();
+        return;
+      }
+
+      // Update URL without reload
+      const newUrl = `/trains?from=${encodeURIComponent(fromParam)}&to=${encodeURIComponent(toParam)}&date=${encodeURIComponent(dateParam)}&quota=${encodeURIComponent(quotaParam)}`;
+      window.history.pushState({}, '', newUrl);
+
+      renderDateRibbon();
+      fetchTrains();
+    }
+
+    // ==========================================
+    // Interactive IRCTC Calendar for Modify Strip (DD-MM-YYYY)
+    // ==========================================
+    let modCalMonth = dateObj.getMonth();
+    let modCalYear = dateObj.getFullYear();
+
+    function toggleModCalendar(e) {
+      if (e) e.stopPropagation();
+      const drop = document.getElementById('mod-calendar-dropdown');
+      if (drop.classList.contains('hidden')) {
+        openModCalendar();
+      } else {
+        drop.classList.add('hidden');
+      }
+    }
+
+    function openModCalendar() {
+      const drop = document.getElementById('mod-calendar-dropdown');
+      drop.classList.remove('hidden');
+      const cur = parseDateToObj(dateParam);
+      modCalMonth = cur.getMonth();
+      modCalYear = cur.getFullYear();
+      renderModCalendarDays();
+    }
+
+    function navigateModCalendarMonth(delta, e) {
+      if (e) e.stopPropagation();
+      const { today, maxDate } = getBookingDateRange();
+      const targetDate = new Date(modCalYear, modCalMonth + delta, 1);
+      const minMonthDate = new Date(today.getFullYear(), today.getMonth(), 1);
+      const maxMonthDate = new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
+
+      if (targetDate < minMonthDate || targetDate > maxMonthDate) {
+        return;
+      }
+
+      modCalMonth += delta;
+      if (modCalMonth > 11) {
+        modCalMonth = 0;
+        modCalYear++;
+      } else if (modCalMonth < 0) {
+        modCalMonth = 11;
+        modCalYear--;
+      }
+      renderModCalendarDays();
+    }
+
+    function renderModCalendarDays() {
+      const title = document.getElementById('mod-calendar-title');
+      const grid = document.getElementById('mod-calendar-days');
+      const prevBtn = document.getElementById('mod-cal-prev');
+      const nextBtn = document.getElementById('mod-cal-next');
+      if (!title || !grid) return;
+      title.innerText = `${monthNames[modCalMonth]} ${modCalYear}`;
+
+      const { today, maxDate } = getBookingDateRange();
+      const minMonthDate = new Date(today.getFullYear(), today.getMonth(), 1);
+      const maxMonthDate = new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
+      const curMonthDate = new Date(modCalYear, modCalMonth, 1);
+
+      if (prevBtn) {
+        const canPrev = curMonthDate > minMonthDate;
+        prevBtn.disabled = !canPrev;
+        prevBtn.classList.toggle('opacity-30', !canPrev);
+        prevBtn.classList.toggle('cursor-not-allowed', !canPrev);
+      }
+      if (nextBtn) {
+        const canNext = curMonthDate < maxMonthDate;
+        nextBtn.disabled = !canNext;
+        nextBtn.classList.toggle('opacity-30', !canNext);
+        nextBtn.classList.toggle('cursor-not-allowed', !canNext);
+      }
+
+      grid.innerHTML = '';
+      const firstDay = new Date(modCalYear, modCalMonth, 1).getDay();
+      const totalDays = new Date(modCalYear, modCalMonth + 1, 0).getDate();
+      const curSelected = parseDateToObj(dateParam);
+
+      for (let i = 0; i < firstDay; i++) {
+        const emp = document.createElement('div');
+        emp.className = 'w-7 h-7';
+        grid.appendChild(emp);
+      }
+
+      for (let d = 1; d <= totalDays; d++) {
+        const dateCell = new Date(modCalYear, modCalMonth, d);
+        dateCell.setHours(0, 0, 0, 0);
+
+        const isPast = dateCell < today;
+        const isBeyond60 = dateCell > maxDate;
+        const isDisabled = isPast || isBeyond60;
+
+        const isSel = curSelected &&
+          curSelected.getFullYear() === modCalYear &&
+          curSelected.getMonth() === modCalMonth &&
+          curSelected.getDate() === d;
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.innerText = d;
+
+        if (isDisabled) {
+          btn.disabled = true;
+          btn.className = 'w-7 h-7 rounded text-secondary/50 font-normal text-[12px] flex items-center justify-center cursor-not-allowed select-none hover:bg-transparent';
+          btn.title = isPast ? 'Past date not available' : 'Advance booking opens 60 days prior (ARP)';
+        } else if (isSel) {
+          btn.className = 'w-7 h-7 rounded bg-primary text-on-primary font-bold text-[12px] flex items-center justify-center shadow-sm';
+          btn.onclick = (ev) => {
+            ev.stopPropagation();
+            dateParam = formatDDMMYYYY(dateCell);
+            document.getElementById('mod-date').value = dateParam;
+            document.getElementById('mod-calendar-dropdown').classList.add('hidden');
+            const newUrl = `/trains?from=${encodeURIComponent(fromParam)}&to=${encodeURIComponent(toParam)}&date=${encodeURIComponent(dateParam)}&quota=${encodeURIComponent(quotaParam)}`;
+            window.history.pushState({}, '', newUrl);
+            renderDateRibbon();
+            fetchTrains();
+          };
+        } else {
+          btn.className = 'w-7 h-7 rounded hover:bg-surface-container text-on-surface font-semibold text-[12px] flex items-center justify-center transition-colors';
+          btn.onclick = (ev) => {
+            ev.stopPropagation();
+            dateParam = formatDDMMYYYY(dateCell);
+            document.getElementById('mod-date').value = dateParam;
+            document.getElementById('mod-calendar-dropdown').classList.add('hidden');
+            const newUrl = `/trains?from=${encodeURIComponent(fromParam)}&to=${encodeURIComponent(toParam)}&date=${encodeURIComponent(dateParam)}&quota=${encodeURIComponent(quotaParam)}`;
+            window.history.pushState({}, '', newUrl);
+            renderDateRibbon();
+            fetchTrains();
+          };
+        }
+        grid.appendChild(btn);
+      }
+    }
+
+    const modDateInput = document.getElementById('mod-date');
+    if (modDateInput) {
+      modDateInput.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openModCalendar();
+      });
+      modDateInput.addEventListener('input', () => {
+        const parsed = parseDateToObj(modDateInput.value);
+        if (parsed) {
+          dateParam = formatDDMMYYYY(parsed);
+        }
+      });
+    }
+
+    document.addEventListener('click', (e) => {
+      const drop = document.getElementById('mod-calendar-dropdown');
+      if (drop && !drop.contains(e.target) && e.target !== modDateInput) {
+        drop.classList.add('hidden');
+      }
+    });
+
+    // Date Ribbon (Prev 3 days, Current, Next 3 days) in DD-MM-YYYY with 60-Day ARP
+    function renderDateRibbon() {
+      const ribbon = document.getElementById('date-ribbon');
+      ribbon.innerHTML = '';
+
+      let baseDate = parseDateToObj(dateParam);
+      const { today, maxDate } = getBookingDateRange();
+      const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+      for (let offset = -3; offset <= 3; offset++) {
+        const d = new Date(baseDate);
+        d.setDate(baseDate.getDate() + offset);
+        d.setHours(0, 0, 0, 0);
+
+        const ddStr = formatDDMMYYYY(d);
+        const isSelected = ddStr === dateParam;
+        const isPast = d < today;
+        const isBeyond60 = d > maxDate;
+        const isDisabled = isPast || isBeyond60;
+
+        const dayName = daysOfWeek[d.getDay()];
+        const monthName = months[d.getMonth()];
+        const dayNum = d.getDate();
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+
+        if (isDisabled) {
+          btn.disabled = true;
+          btn.className = 'px-3 py-1.5 rounded-lg bg-surface-container-low text-secondary/50 font-semibold text-[12px] border border-secondary/15 whitespace-nowrap shrink-0 cursor-not-allowed select-none';
+          btn.title = isPast ? 'Past date not available' : 'Advance reservation opens 60 days prior (ARP)';
+        } else if (isSelected) {
+          btn.className = 'px-4 py-1.5 rounded-lg bg-primary text-on-primary font-bold text-[12px] shadow-sm whitespace-nowrap border border-primary shrink-0';
+          btn.onclick = () => {
+            dateParam = ddStr;
+            document.getElementById('mod-date').value = ddStr;
+            const newUrl = `/trains?from=${encodeURIComponent(fromParam)}&to=${encodeURIComponent(toParam)}&date=${encodeURIComponent(dateParam)}&quota=${encodeURIComponent(quotaParam)}`;
+            window.history.pushState({}, '', newUrl);
+            renderDateRibbon();
+            fetchTrains();
+          };
+        } else {
+          btn.className = 'px-3 py-1.5 rounded-lg bg-surface-container-lowest text-secondary hover:text-on-surface hover:bg-surface-container font-semibold text-[12px] border border-secondary/15 whitespace-nowrap shrink-0 transition-colors';
+          btn.onclick = () => {
+            dateParam = ddStr;
+            document.getElementById('mod-date').value = ddStr;
+            const newUrl = `/trains?from=${encodeURIComponent(fromParam)}&to=${encodeURIComponent(toParam)}&date=${encodeURIComponent(dateParam)}&quota=${encodeURIComponent(quotaParam)}`;
+            window.history.pushState({}, '', newUrl);
+            renderDateRibbon();
+            fetchTrains();
+          };
+        }
+
+        btn.innerHTML = `${dayName}, ${dayNum} ${monthName}`;
+        ribbon.appendChild(btn);
+      }
+    }
+
+    // Fetch Trains from API
+    async function fetchTrains() {
+      const list = document.getElementById('trains-list');
+      const headline = document.getElementById('results-headline');
+      const subtext = document.getElementById('results-subtext');
+      const emptyState = document.getElementById('empty-state');
+
+      if (!fromParam || !toParam) {
+        headline.innerText = 'Search Trains';
+        subtext.innerText = 'Please enter origin and destination stations above to view available trains.';
+        list.innerHTML = `
+          <div class="bg-surface-container-lowest rounded-xl p-12 text-center border border-secondary/20 shadow-sm">
+            <span class="material-symbols-outlined text-[48px] text-secondary/40 mb-2">train</span>
+            <h3 class="font-headline-sm text-on-surface mb-1">Enter Stations to Search</h3>
+            <p class="text-secondary text-body-sm max-w-md mx-auto">
+              Please enter your departure station and destination in the search strip above and click Modify to view real-time train schedules.
+            </p>
+          </div>
+        `;
+        emptyState.classList.add('hidden');
+        return;
+      }
+
+      headline.innerText = 'Searching trains...';
+      subtext.innerText = `${fromParam} ➔ ${toParam}`;
+      list.innerHTML = '<div class="p-8 text-center text-secondary font-semibold">Fetching live seat inventory across IRCTC railway matrix...</div>';
+      emptyState.classList.add('hidden');
+
+      try {
+        let dateClean = '20261105';
+        const parts = dateParam.replace(/\//g, '-').split('-');
+        if (parts.length === 3) {
+          if (parts[0].length === 2) { // DD-MM-YYYY -> YYYYMMDD
+            dateClean = `${parts[2]}${parts[1]}${parts[0]}`;
+          } else { // YYYY-MM-DD -> YYYYMMDD
+            dateClean = `${parts[0]}${parts[1]}${parts[2]}`;
+          }
+        } else if (dateParam.length === 8) {
+          dateClean = dateParam;
+        }
+
+        const res = await fetch(`/v1/search/trains?from=${encodeURIComponent(fromParam)}&to=${encodeURIComponent(toParam)}&date=${dateClean}`);
+        const data = await res.json();
+
+        currentTrainsData = data.trains || [];
+        applyFilters();
+      } catch (err) {
+        list.innerHTML = `<div class="p-6 text-center text-error font-bold">Failed to load trains: ${escapeHTML(err.message)}</div>`;
+      }
+    }
+
+    // Filter & Sort Trains
+    let activeDepTimeFilter = null;
+
+    function toggleTimeFilter(type, timeSlot, btn) {
+      if (activeDepTimeFilter === timeSlot) {
+        activeDepTimeFilter = null;
+        btn.classList.remove('bg-primary/10', 'border-primary', 'text-primary');
+      } else {
+        document.querySelectorAll('.time-filter').forEach(b => b.classList.remove('bg-primary/10', 'border-primary', 'text-primary'));
+        activeDepTimeFilter = timeSlot;
+        btn.classList.add('bg-primary/10', 'border-primary', 'text-primary');
+      }
+      applyFilters();
+    }
+
+    function resetFilters() {
+      document.getElementById('filter-avail-only').checked = false;
+      document.getElementById('filter-ac-only').checked = false;
+      document.querySelectorAll('.filter-class').forEach(c => c.checked = false);
+      document.querySelectorAll('.filter-type').forEach(t => t.checked = false);
+      document.querySelectorAll('.time-filter').forEach(b => b.classList.remove('bg-primary/10', 'border-primary', 'text-primary'));
+      activeDepTimeFilter = null;
+      applyFilters();
+    }
+
+    function applyFilters() {
+      const availOnly = document.getElementById('filter-avail-only').checked;
+      const acOnly = document.getElementById('filter-ac-only').checked;
+      
+      const selectedClasses = Array.from(document.querySelectorAll('.filter-class:checked')).map(c => c.value);
+      const selectedTypes = Array.from(document.querySelectorAll('.filter-type:checked')).map(t => t.value);
+
+      let filtered = currentTrainsData.filter(t => {
+        // Quick Filters
+        if (availOnly && t.available_seats <= 0) return false;
+
+        // AC Only
+        if (acOnly) {
+          const hasAC = t.classes ? t.classes.some(c => ['1A', '2A', '3A', '3E', 'CC', 'EC'].includes(c.class_code)) : ['1A', '2A', '3A', '3E', 'CC', 'EC'].includes(t.class_code);
+          if (!hasAC) return false;
+        }
+
+        // Class Filter
+        if (selectedClasses.length > 0) {
+          const matchesClass = t.classes ? t.classes.some(c => selectedClasses.includes(c.class_code)) : selectedClasses.includes(t.class_code);
+          if (!matchesClass) return false;
+        }
+
+        // Train Type Filter
+        if (selectedTypes.length > 0 && t.train_type && !selectedTypes.includes(t.train_type)) {
+          return false;
+        }
+
+        // Departure Time Filter
+        if (activeDepTimeFilter && t.departure_time) {
+          const hour = parseInt(t.departure_time.split(':')[0], 10);
+          if (activeDepTimeFilter === 'early' && !(hour >= 0 && hour < 6)) return false;
+          if (activeDepTimeFilter === 'morning' && !(hour >= 6 && hour < 12)) return false;
+          if (activeDepTimeFilter === 'midday' && !(hour >= 12 && hour < 18)) return false;
+          if (activeDepTimeFilter === 'night' && !(hour >= 18 && hour < 24)) return false;
+        }
+
+        return true;
+      });
+
+      renderTrains(filtered);
+    }
+
+    function sortAndRenderTrains() {
+      applyFilters();
+    }
+
+    // Render Trains List
+    function renderTrains(trains) {
+      const list = document.getElementById('trains-list');
+      const headline = document.getElementById('results-headline');
+      const subtext = document.getElementById('results-subtext');
+      const emptyState = document.getElementById('empty-state');
+      const sortBy = document.getElementById('sort-select').value;
+
+      // Sort
+      trains.sort((a, b) => {
+        if (sortBy === 'dep_early') return (a.departure_time || '').localeCompare(b.departure_time || '');
+        if (sortBy === 'dep_late') return (b.departure_time || '').localeCompare(a.departure_time || '');
+        if (sortBy === 'duration') return (a.duration || '').localeCompare(b.duration || '');
+        if (sortBy === 'arr_early') return (a.arrival_time || '').localeCompare(b.arrival_time || '');
+        return 0;
+      });
+
+      displayedTrains = trains;
+
+      headline.innerText = `${trains.length} Trains Available from ${extractStationCode(fromParam)} ➔ ${extractStationCode(toParam)}`;
+      subtext.innerText = `${dateParam} | Quota: ${quotaParam}`;
+
+      if (trains.length === 0) {
+        list.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+      }
+      emptyState.classList.add('hidden');
+
+      const daysOfWeekLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+      const daysFull = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+      list.innerHTML = trains.map((t, trainIdx) => {
+        const classes = t.classes || [
+          { class_code: t.class_code || '3A', class_name: 'AC 3 Tier', available_seats: t.available_seats, status: `AVAILABLE ${t.available_seats}`, fare: t.base_fare_inr, probability: t.confirmation_probability }
+        ];
+
+        // Format running days indicator
+        const runningDays = t.runs_on || daysFull;
+        const runsOnHtml = daysFull.map((d, i) => {
+          const isActive = runningDays.includes(d);
+          return `<span class="inline-block w-4 h-4 rounded text-[10px] text-center font-bold leading-4 ${isActive ? 'bg-primary/15 text-primary' : 'text-secondary/40'}">${daysOfWeekLabels[i]}</span>`;
+        }).join('');
+
+        // Classes buttons
+        const classTilesHtml = classes.map((c, cIdx) => {
+          const isAvail = c.available_seats > 0;
+          return `
+            <div onclick="selectClassForBooking(${trainIdx}, ${cIdx})" id="class-tile-${trainIdx}-${cIdx}" class="class-tile cursor-pointer bg-surface-container-low hover:bg-surface-container-high rounded-lg p-2.5 border border-secondary/20 transition-all flex flex-col justify-between min-w-[130px] flex-1 text-left">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-[14px] text-on-surface">${escapeHTML(c.class_code)}</span>
+                <span class="text-[10px] text-secondary">${escapeHTML(c.class_name || '')}</span>
+              </div>
+              <div class="my-1.5">
+                <div class="text-[12px] font-bold ${isAvail ? 'text-tertiary' : 'text-error'} leading-tight">
+                  ${escapeHTML(c.status || (isAvail ? `AVAILABLE ${c.available_seats}` : 'WAITLIST'))}
+                </div>
+                <div class="text-[10px] text-secondary">Updated 1m ago</div>
+              </div>
+              <div class="flex items-center justify-between pt-1 border-t border-secondary/10">
+                <span class="text-[13px] font-bold text-primary">₹${c.fare ? c.fare.toFixed(2) : (t.base_fare_inr ? t.base_fare_inr.toFixed(2) : '0.00')}</span>
+                <span class="text-[10px] text-secondary">Confirm ${Math.round((c.probability || t.confirmation_probability || 0.95) * 100)}%</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        return `
+          <div class="bg-surface-container-lowest rounded-xl p-4 sm:p-5 border border-secondary/20 shadow-sm hover:shadow transition-all" id="train-card-${trainIdx}">
+            
+            <!-- Top Train Name & Runs On -->
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-secondary/10 pb-3">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="font-title-station text-[18px] sm:text-[20px] font-bold text-on-surface">
+                  ${escapeHTML(t.train_number)} — ${escapeHTML(t.train_name)}
+                </span>
+                <span class="px-2 py-0.5 rounded bg-primary/10 text-primary font-label-caps uppercase text-[10px] font-bold">
+                  ${escapeHTML(t.train_type || 'EXPRESS')}
+                </span>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="flex items-center gap-1 text-[11px] text-secondary">
+                  <span class="font-semibold mr-1">Runs On:</span>
+                  <div class="flex gap-0.5">${runsOnHtml}</div>
+                </div>
+                <button onclick="openScheduleModal('${encodeURIComponent(t.train_number)}', '${encodeURIComponent(t.train_name)}')" class="text-primary text-[12px] font-semibold hover:underline inline-flex items-center gap-0.5 cursor-pointer">
+                  Schedule <span class="material-symbols-outlined text-[14px]">open_in_new</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Schedule Corridor -->
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center py-4 text-left">
+              
+              <!-- Departure -->
+              <div class="sm:col-span-4">
+                <div class="font-headline-sm text-[22px] font-bold text-on-surface">${escapeHTML(t.departure_time || '00:00')}</div>
+                <div class="text-[13px] font-semibold text-secondary truncate">${escapeHTML(t.origin || fromParam)}</div>
+              </div>
+
+              <!-- Duration Bar -->
+              <div class="sm:col-span-4 flex flex-col items-center justify-center text-center">
+                <span class="text-[11px] text-secondary font-semibold mb-1">${escapeHTML(t.duration || 'Direct Run')}</span>
+                <div class="w-full flex items-center gap-1">
+                  <div class="h-0.5 flex-1 bg-secondary/30"></div>
+                  <span class="material-symbols-outlined text-primary text-[18px]">train</span>
+                  <div class="h-0.5 flex-1 bg-secondary/30"></div>
+                </div>
+              </div>
+
+              <!-- Arrival -->
+              <div class="sm:col-span-4 text-left sm:text-right">
+                <div class="font-headline-sm text-[22px] font-bold text-on-surface">${escapeHTML(t.arrival_time || '00:00')}</div>
+                <div class="text-[13px] font-semibold text-secondary truncate">${escapeHTML(t.destination || toParam)}</div>
+              </div>
+
+            </div>
+
+            <!-- Classes Grid -->
+            <div class="flex flex-wrap gap-2.5 pt-2">
+              ${classTilesHtml}
+            </div>
+
+            <!-- Booking Bar (Hidden until a class tile is clicked) -->
+            <div id="booking-bar-${trainIdx}" class="hidden mt-4 pt-3 border-t border-secondary/15 flex flex-col sm:flex-row items-center justify-between gap-3 bg-surface-container-low p-3 rounded-lg">
+              <div class="text-left">
+                <span class="text-[12px] text-secondary">Selected: <strong id="selected-info-${trainIdx}" class="text-on-surface"></strong></span>
+                <div class="text-[11px] text-secondary mt-0.5">Instant booking with guaranteed bitmask reservation lock</div>
+              </div>
+              <button onclick="openBookingModal(${trainIdx})" class="w-full sm:w-auto bg-primary text-on-primary font-label-md px-6 py-2 rounded-lg text-sm font-bold shadow-[2px_2px_0px_0px_#5a5c79] hover:-translate-y-0.5 transition-all cursor-pointer">
+                BOOK NOW
+              </button>
+            </div>
+
+          </div>
+        `;
+      }).join('');
+    }
+
+    function extractStationCode(str) {
+      if (!str) return '';
+      const parts = str.split(' - ');
+      return parts.length > 1 ? parts[parts.length - 1].trim() : str;
+    }
+
+    // Class selection
+    function selectClassForBooking(trainIdx, classIdx) {
+      const train = displayedTrains[trainIdx];
+      if (!train) return;
+
+      const classes = train.classes || [
+        { class_code: train.class_code || '3A', class_name: 'AC 3 Tier', available_seats: train.available_seats, status: `AVAILABLE ${train.available_seats}`, fare: train.base_fare_inr }
+      ];
+      const cls = classes[classIdx] || classes[0];
+
+      train._selectedClassIdx = classIdx;
+      selectedBookingTrain = train;
+      selectedBookingClass = cls;
+
+      // Close all other booking bars across all other trains
+      document.querySelectorAll('[id^="booking-bar-"]').forEach(el => el.classList.add('hidden'));
+
+      // Remove highlight from all other class tiles across all trains
+      document.querySelectorAll('.class-tile').forEach(el => {
+        el.classList.remove('border-primary', 'bg-surface-container-lowest', 'shadow', 'ring-2', 'ring-primary');
+        el.classList.add('border-secondary/20');
+      });
+
+      // Highlight this specific chosen tile
+      const chosen = document.getElementById(`class-tile-${trainIdx}-${classIdx}`);
+      if (chosen) {
+        chosen.classList.remove('border-secondary/20');
+        chosen.classList.add('border-primary', 'bg-surface-container-lowest', 'shadow', 'ring-2', 'ring-primary');
+      }
+
+      // Show this train's booking bar
+      const bar = document.getElementById(`booking-bar-${trainIdx}`);
+      const info = document.getElementById(`selected-info-${trainIdx}`);
+      if (info) {
+        info.innerText = `${train.train_name} · ${cls.class_code} (${cls.class_name || ''}) · ${cls.status || 'AVAILABLE'} · ₹${(cls.fare || train.base_fare_inr).toFixed(2)}`;
+      }
+      if (bar) {
+        bar.classList.remove('hidden');
+      }
+    }
+
+    // Modal
+    function openBookingModal(trainIdx) {
+      const train = displayedTrains[trainIdx];
+      if (!train) return;
+
+      const classes = train.classes || [
+        { class_code: train.class_code || '3A', class_name: 'AC 3 Tier', available_seats: train.available_seats, status: `AVAILABLE ${train.available_seats}`, fare: train.base_fare_inr }
+      ];
+      const clsIdx = (train._selectedClassIdx !== undefined) ? train._selectedClassIdx : 0;
+      const cls = classes[clsIdx] || classes[0];
+
+      selectedBookingTrain = train;
+      selectedBookingClass = cls;
+
+      document.getElementById('modal-train-title').innerText = `${train.train_number} — ${train.train_name}`;
+      document.getElementById('modal-train-subtitle').innerText = `Class: ${cls.class_code} (${cls.class_name || ''}) · Date: ${dateParam} · Quota: ${quotaParam}`;
+      
+      const singleFare = cls.fare || train.base_fare_inr || 2280;
+      const totalFare = singleFare * 2; // for 2 passengers
+      document.getElementById('modal-fare-display').innerText = `₹${totalFare.toFixed(2)}`;
+
+      document.getElementById('booking-modal').classList.remove('hidden');
+    }
+
+    function closeBookingModal() {
+      document.getElementById('booking-modal').classList.add('hidden');
+      document.getElementById('modal-success-screen').classList.add('hidden');
+    }
+
+    // Booking Execution
+    async function handleBookingSubmit(e) {
+      e.preventDefault();
+      const btn = document.getElementById('modal-pay-btn');
+      btn.disabled = true;
+      btn.innerHTML = `<span class="material-symbols-outlined animate-spin text-[18px]">progress_activity</span> Processing...`;
+
+      try {
+        const trainNo = selectedBookingTrain.train_number;
+        const clsCode = selectedBookingClass.class_code;
+
+        // 1. Lobby Join
+        await fetch('/v1/ingress/lobby/join', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: 'citizen-user',
+            client_type: 'CITIZEN',
+            train_number: trainNo,
+            run_date: dateParam.replace(/-/g, ''),
+            class_code: clsCode
+          })
+        });
+
+        // 2. Hold Segment
+        const holdRes = await fetch('/v1/booking/hold', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: 'citizen-user',
+            train_number: trainNo,
+            run_date: dateParam.replace(/-/g, ''),
+            class_code: clsCode,
+            quota_code: quotaParam,
+            origin_stop_index: 0,
+            dest_stop_index: 4,
+            passenger_count: 2,
+            lease_ttl_seconds: 300
+          })
+        });
+
+        const holdData = await holdRes.json();
+        const leaseToken = holdData.lease_token || "lease-mock-token-99";
+
+        // 3. Payment Init
+        const payRes = await fetch('/v1/payment/preauth/init', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: 'citizen-user',
+            train_number: trainNo,
+            run_date: dateParam.replace(/-/g, ''),
+            lease_token: leaseToken,
+            amount_inr: (selectedBookingClass.fare || selectedBookingTrain.base_fare_inr) * 2,
+            gateway: 'RAZORPAY'
+          })
+        });
+        const txn = await payRes.json();
+
+        // 4. Payment Webhook (Authenticated with shared webhook secret)
+        await fetch('/v1/payment/webhook', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-Webhook-Secret': 'railpulse_webhook_secret_2026'
+          },
+          body: JSON.stringify({
+            txn_id: txn.txn_id,
+            gateway_txn_id: 'pay_rzp_mock_live_998',
+            gateway: 'RAZORPAY',
+            status: 'SUCCESS',
+            amount_inr: (selectedBookingClass.fare || selectedBookingTrain.base_fare_inr) * 2
+          })
+        });
+
+        // 5. Confirm
+        const confirmRes = await fetch('/v1/booking/confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: 'citizen-user',
+            lease_token: leaseToken,
+            payment_transaction_id: txn.txn_id,
+            has_flexi_cancel: document.getElementById('modal-flexi').checked,
+            passengers: [
+              { passenger_id: 'p-1', full_name: document.getElementById('pax-1-name').value, age: parseInt(document.getElementById('pax-1-age').value, 10), gender: document.getElementById('pax-1-gender').value, is_senior_citizen: document.getElementById('pax-1-senior').checked },
+              { passenger_id: 'p-2', full_name: document.getElementById('pax-2-name').value || 'Companion Passenger', age: parseInt(document.getElementById('pax-2-age').value || '28', 10), gender: document.getElementById('pax-2-gender').value, is_senior_citizen: false }
+            ]
+          })
+        });
+
+        const confirmData = await confirmRes.json();
+        const pnr = confirmData.pnr_number || ("310" + Math.floor(1000000 + Math.random() * 9000000));
+
+        // Show Success View
+        document.getElementById('confirmed-modal-pnr').innerText = pnr;
+        document.getElementById('confirmed-train-info').innerText = `${selectedBookingTrain.train_number} ${selectedBookingTrain.train_name} (${selectedBookingClass.class_code})`;
+        document.getElementById('confirmed-date-info').innerText = `${dateParam} · Quota: ${quotaParam}`;
+
+        document.getElementById('modal-success-screen').classList.remove('hidden');
+
+      } catch (err) {
+        alert("Booking transaction error: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<span>PROCEED TO PAYMENT</span><span class="material-symbols-outlined text-[18px]">lock</span>`;
+      }
+    }
+
+    // Schedule Modal
+    function openScheduleModal(trainNo, trainName) {
+      document.getElementById('schedule-title').innerText = `${trainNo} — ${trainName}`;
+      document.getElementById('schedule-subtitle').innerText = `Official Route Schedule & Intermediate Halts`;
+      
+      const stops = [
+        { station: "ORIGIN TERMINUS", arr: "--", dep: "Day 1", halt: "--", dist: "0 km" },
+        { station: "MAJOR JUNCTION 1", arr: "3h 15m", dep: "3h 25m", halt: "10 mins", dist: "210 km" },
+        { station: "DIVISIONAL HALT 2", arr: "7h 40m", dep: "7h 45m", halt: "5 mins", dist: "520 km" },
+        { station: "INTERMEDIATE JUNCTION 3", arr: "14h 20m", dep: "14h 30m", halt: "10 mins", dist: "980 km" },
+        { station: "DESTINATION TERMINUS", arr: "Scheduled", dep: "--", halt: "--", dist: "1,420 km" }
+      ];
+
+      const html = stops.map(s => `
+        <div class="flex items-center justify-between py-2 text-[12px]">
+          <div>
+            <div class="font-bold text-on-surface">${s.station}</div>
+            <div class="text-secondary text-[11px]">Distance: ${s.dist}</div>
+          </div>
+          <div class="text-right">
+            <span class="font-semibold text-primary">Arr: ${s.arr} · Dep: ${s.dep}</span>
+            <div class="text-secondary text-[11px]">Halt: ${s.halt}</div>
+          </div>
+        </div>
+      `).join('');
+
+      document.getElementById('schedule-stops-list').innerHTML = html;
+      document.getElementById('schedule-modal').classList.remove('hidden');
+    }
+
+    // Initial Load
+    renderDateRibbon();
+    fetchTrains();
+  </script>
+</body>
+</html>
